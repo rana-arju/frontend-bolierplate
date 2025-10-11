@@ -48,23 +48,29 @@ jobs:
             echo "${{ secrets.FRONTEND_ENV }}" > $APP_DIR/.env.local
             export $(grep -v '^#' $APP_DIR/.env.local | xargs)
 
-            # Ensure npm is in PATH
-            export PATH=/root/.nvm/versions/node/v24.8.0/bin:$PATH
-
             cd $APP_DIR
 
             # Optional: debug
-            echo "Node version: $(node -v)"
-            echo "NPM version: $(npm -v)"
+            # Load NVM
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
             rm -rf node_modules .next
 
-            # Install production dependencies
-            npm install --omit=dev
+            # Ensure package.json exists
+            if [ ! -f package.json ]; then
+              echo "Error: package.json not found!"
+              exit 1
+            fi
+            echo "Installing production dependencies..."
+            npm install --omit=dev --legacy-peer-deps
 
             # Build on VPS
-            npm run build --turbopack
+            npm run build
 
-            # Restart frontend
-            pm2 restart 13 || npm --name "frontend" run start
+            echo "Restarting app with PM2..."
+            pm2 restart frontend || pm2 start npm --name "frontend" -- run start
+
+            echo "✅ Deployment completed successfully!"
 
