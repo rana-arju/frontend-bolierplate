@@ -27,14 +27,11 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: |
-            package.json
-            package-lock.json
-            public/
-            src/
+          source: .
           target: /var/www/frontend
           rm: false
           overwrite: true
+        
 
       # 3. Install deps, build, and restart frontend on VPS
       - name: Deploy & Restart Frontend on VPS
