@@ -57,6 +57,8 @@ jobs:
             echo "Node version: $(node -v)"
             echo "NPM version: $(npm -v)"
 
+            rm -rf .next
+            
             # Install production dependencies
             npm install --omit=dev
 
