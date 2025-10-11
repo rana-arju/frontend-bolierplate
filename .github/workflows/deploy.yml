@@ -68,8 +68,6 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-            rm -rf node_modules .next
-
             # Ensure package.json exists
             if [ ! -f package.json ]; then
               echo "Error: package.json not found!"
