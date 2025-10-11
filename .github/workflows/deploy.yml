@@ -27,7 +27,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: .
+          source: "./*"
           target: /var/www/frontend
           rm: false
           overwrite: true
