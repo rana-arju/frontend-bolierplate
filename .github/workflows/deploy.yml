@@ -30,8 +30,8 @@ jobs:
           source: |
             package.json
             package-lock.json
-            public
-            src
+            public/
+            src/
           target: /var/www/frontend
           rm: false
           overwrite: true
