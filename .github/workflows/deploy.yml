@@ -19,7 +19,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Upload only source files to VPS
+      # Upload only source files
       - name: Upload to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -27,14 +27,17 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: .
-          target: /var/www/frontend
-          rm: false
-          overwrite: true
-        
+          source: |
+            package.json
+            package-lock.json
+            public
+            src
+            target: /var/www/frontend
+            rm: false
+            overwrite: true
 
-      # 3. Install deps, build, and restart frontend on VPS
-      - name: Deploy & Restart Frontend on VPS
+      # Build & restart on VPS
+      - name: Deploy & Restart Frontend
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -44,30 +47,16 @@ jobs:
           script: |
             set -e
             APP_DIR=/var/www/frontend
-
-            # Load environment variables
-            echo "${{ secrets.FRONTEND_ENV }}" > $APP_DIR/.env.local
-            export $(grep -v '^#' $APP_DIR/.env.local | xargs)
-
-            # Ensure npm is in PATH
-            export PATH=/root/.nvm/versions/node/v24.8.0/bin:$PATH
-
             cd $APP_DIR
 
-            # Optional: debug Node/npm versions
-            echo "Node version: $(node -v)"
-            echo "NPM version: $(npm -v)"
-
-            # Remove old build if exists
+            # Optional: clean old build
             rm -rf .next
 
             # Install production dependencies
             npm install --omit=dev
 
-            # Build on VPS (Turbopack)
+            # Build fresh
             npm run build --turbopack
 
-            # Restart frontend via PM2
+            # Restart frontend
             pm2 restart frontend || npm --name "frontend" run start
-
-            echo "✅ Frontend deployed successfully!"
