@@ -31,9 +31,7 @@ jobs:
             package.json
             package-lock.json
             public
-            pages
-            components
-            styles
+            src
           target: /var/www/frontend
           rm: false
           overwrite: true
