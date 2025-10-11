@@ -18,7 +18,19 @@ jobs:
       # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
+          # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.20'
+          cache: 'npm'
 
+      # 3. Install dependencies locally (for build)
+      - name: Install Dependencies
+        run: npm install
+      # 5. Build project (TypeScript)
+      - name: Build Project
+        run: npm run build
       # Upload only source files
       - name: Upload to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -73,4 +85,3 @@ jobs:
             pm2 restart frontend || pm2 start npm --name "frontend" -- run start
 
             echo "✅ Deployment completed successfully!"
-
