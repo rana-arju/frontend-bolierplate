@@ -57,8 +57,8 @@ jobs:
             echo "Node version: $(node -v)"
             echo "NPM version: $(npm -v)"
 
-            rm -rf .next
-            
+            rm -rf node_modules .next
+
             # Install production dependencies
             npm install --omit=dev
 
@@ -66,5 +66,5 @@ jobs:
             npm run build --turbopack
 
             # Restart frontend
-            pm2 restart frontend || npm --name "frontend" run start
+            pm2 restart 13 || npm --name "frontend" run start
 
