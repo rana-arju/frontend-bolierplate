@@ -33,7 +33,7 @@ jobs:
           overwrite: true
 
       # Build & restart on VPS
-      - name: Deploy & Restart Frontend
+      - name: Deploy & Restart Frontend on VPS
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -43,16 +43,26 @@ jobs:
           script: |
             set -e
             APP_DIR=/var/www/frontend
+
+            # Load environment variables
+            echo "${{ secrets.FRONTEND_ENV }}" > $APP_DIR/.env.local
+            export $(grep -v '^#' $APP_DIR/.env.local | xargs)
+
+            # Ensure npm is in PATH
+            export PATH=/root/.nvm/versions/node/v24.8.0/bin:$PATH
+
             cd $APP_DIR
 
-            # Optional: clean old build
-            rm -rf .next
+            # Optional: debug
+            echo "Node version: $(node -v)"
+            echo "NPM version: $(npm -v)"
 
             # Install production dependencies
             npm install --omit=dev
 
-            # Build fresh
-            npm run build
+            # Build on VPS
+            npm run build --turbopack
 
             # Restart frontend
             pm2 restart frontend || npm --name "frontend" run start
+
