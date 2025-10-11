@@ -27,11 +27,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: |
-            package.json
-            package-lock.json
-            public
-            src
+          source: .
           target: /var/www/frontend
           rm: false
           overwrite: true
@@ -56,7 +52,7 @@ jobs:
             npm install --omit=dev
 
             # Build fresh
-            npm run build --turbopack
+            npm run build
 
             # Restart frontend
             pm2 restart frontend || npm --name "frontend" run start
