@@ -34,11 +34,6 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      # 5. Export static files (if using static export)
-      - name: Export Next.js (optional)
-        run: |
-          if [ -f next.config.js ]; then
-            npm run export || echo "Skipping static export"
 
 
       # 6. Upload to VPS
