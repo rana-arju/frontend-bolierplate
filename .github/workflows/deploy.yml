@@ -1,0 +1,81 @@
+name: CI/CD Frontend Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.20'
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # 4. Build Next.js project
+      - name: Build Project
+        run: npm run build
+
+      # 5. Export static files (if using static export)
+      - name: Export Next.js (optional)
+        run: |
+          if [ -f next.config.js ]; then
+            npm run export || echo "Skipping static export"
+
+
+      # 6. Upload to VPS
+      - name: Upload to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: '/*'
+          target: /var/www/frontend
+          rm: false
+          overwrite: true
+
+      # 8. Restart frontend service on VPS
+      - name: Restart Frontend on VPS
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            set -e
+            APP_DIR=/var/www/frontend
+
+            echo "${{ secrets.FRONTEND_ENV }}" > $APP_DIR/.env.local
+            export $(grep -v '^#' $APP_DIR/.env.local | xargs)
+
+            cd $APP_DIR
+
+            echo "Installing production deps..."
+            npm install --omit=dev
+
+            echo "Restarting frontend with PM2..."
+            pm2 restart frontend || pm2 start npm --name "frontend" -- run start
+
+            echo "✅ Frontend deployed successfully!"
+
