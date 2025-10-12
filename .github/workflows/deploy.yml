@@ -15,24 +15,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
-          # 2. Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22.20'
-          cache: 'npm'
 
-      # 3. Install dependencies locally (for build)
-      - name: Install Dependencies
-        run: npm install
-      # 5. Build project (TypeScript)
-      - name: Build Project
-        run: npm run build
-      # Upload only source files
-      - name: Upload to VPS
+      # 2. Upload Source to VPS (no build yet)
+      - name: Upload Source to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -44,8 +32,8 @@ jobs:
           rm: true
           overwrite: true
 
-      # Build & restart on VPS
-      - name: Deploy & Restart Frontend on VPS
+      # 3. Build and Restart on VPS
+      - name: Build & Restart on VPS
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -55,21 +43,25 @@ jobs:
           script: |
             set -e
             APP_DIR=/var/www/frontend
-            echo "${{ secrets.FRONTEND_ENV }}" > $APP_DIR/.env.local
-            export $(grep -v '^#' $APP_DIR/.env.local | xargs)
             cd $APP_DIR
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            echo "Installing production dependencies..."
+            echo "${{ secrets.FRONTEND_ENV }}" > .env.local
+
+            # Load nvm (if installed)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            echo "🧹 Cleaning old build..."
+            rm -rf .next node_modules
+
+            echo "📦 Installing dependencies..."
             npm install --omit=dev --legacy-peer-deps
 
-            echo "Cleaning old build..."
-            rm -rf .next
-
-            echo "Building project..."
+            echo "⚙️ Building project..."
             npm run build
 
-            echo "Restarting app with PM2..."
-            pm2 restart frontend || pm2 start npm --name "frontend" -- run start
+            echo "🚀 Restarting PM2..."
+            pm2 delete frontend || true
+            pm2 start npm --name "frontend" -- run start
 
+            echo "✅ Deployment Completed!"
