@@ -4,8 +4,7 @@
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-4xl font-bold">Hello, Bangladesh! You are pass CI/CD practice!  </h1>
-      
+      <h1 className="text-4xl font-bold">Wow, Rana! you win...  </h1>
     </main>
   );
 }
